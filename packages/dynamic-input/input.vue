@@ -23,6 +23,7 @@
     v-bind="_bind"
     :class="{'multi-select': descriptor.multiple}"
     :size="size"
+    :filterable="descriptor.filterable"
     :multiple="descriptor.multiple">
     <el-option v-for="option in _options" :key="option.label" :value="option.value" :label="option.label" :disabled="option.disabled"></el-option>
   </el-select>
@@ -35,6 +36,15 @@
     v-bind="_bind"
     :size="size">
   </el-date-picker>
+  <div v-else-if="descriptor.type === 'upload'" class="file-upload">
+    <div v-if="!_value" >
+      <h2>Select an image</h2>
+      <input type="file" @change="onFileChange">
+    </div>
+    <div v-else>
+      <el-image v-bind="_bind" style="width: 100px; height: 100px" :src="_value"></el-image>
+    </div>
+  </div>
 </template>
 
 <script>
@@ -46,7 +56,8 @@ const TYPE_COMPONENT_MAP = {
   integer: 'el-input-number',
   float: 'el-input-number',
   enum: 'el-select',
-  url: 'el-input'
+  url: 'el-input',
+  upload: 'el-upload',
 }
 
 export default {
@@ -63,6 +74,9 @@ export default {
     descriptor: {
       type: Object,
       required: true
+    },
+    prop: {
+      type: String
     }
   },
   components: {},
@@ -102,12 +116,14 @@ export default {
       return Object.assign(data, this.descriptor.props)
     },
     isSpecialType () {
-      return ['integer', 'float', 'number', 'enum', 'date'].includes(this.descriptor.type)
+      return ['integer', 'float', 'number', 'enum', 'date', 'upload'].includes(this.descriptor.type)
     }
   },
   data () {
     return {
-      name: ''
+      name: '',
+      dialogImageUrl: '',
+      dialogVisible: false
     }
   },
   created () {
@@ -116,6 +132,49 @@ export default {
   methods: {
     init () {
       this.name = TYPE_COMPONENT_MAP[this.descriptor.type] || 'el-input'
+    },
+
+    onFileChange(e) {
+      var files = e.target.files || e.dataTransfer.files;
+      if (!files.length)
+        return;
+      this.createImage(files[0]);
+    },
+    createImage(file) {
+      var image = new Image();
+      var reader = new FileReader();
+
+      reader.onload = (e) => {
+        this._value = e.target.result;
+      };
+      reader.readAsDataURL(file);
+      if ( typeof this.descriptor.onFileChange === 'function' ) {
+        this.descriptor.onFileChange(file, this.prop);
+      }
+    },
+    removeImage: function (e) {
+      this._value = '';
+    },
+
+    onImagePreview(file) {
+      // this.$bus.$emit('onImagePreview', file)
+    },
+    onImageRemove(file, fileList) {
+      // this.$bus.$emit('onImageRemove', { file, fileList })
+    },
+
+    handleImageExceed(files, fileList) {
+      // this.$bus.$emit('onImagesExceed', { files, fileList })
+    },
+    handleRemove(file, fileList) {
+      console.log(file, fileList);
+    },
+    handlePictureCardPreview(file) {
+      this.dialogImageUrl = file.url;
+      this.dialogVisible = true;
+    },
+    onFLChange(file, fileList) {
+      this._value = fileList
     }
   }
 }
@@ -127,5 +186,23 @@ export default {
 }
 .multi-select {
   width: calc(100% - 60px);
+}
+.file-upload {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  min-height: 100px;
+  text-align: center;
+}
+.file-upload h2 {
+  margin: 0;
+  font-size: 15px;
+}
+.file-upload .el-image {
+  display: block;
+  border-radius: 5px;
 }
 </style>

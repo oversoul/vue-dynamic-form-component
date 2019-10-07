@@ -1,6 +1,7 @@
 export default {
   string: { type: 'string', required: true, disabled: true, placeholder: 'test', props: { autocomplete: 'on', type: 'textarea', rows: 4 } },
   url: { type: 'url', message: 'The url must be an url' },
+  images: { type: 'upload', autoupload: false, action: 'http://localhost:8080' },
   object: {
     type: 'object',
     label: 'object label',
@@ -22,11 +23,24 @@ export default {
   array: {
     type: 'array',
     label: 'array label',
+    onDragEnd: this.done,
     defaultField: {
       type: 'object',
       fields: {
         string: { type: 'string', required: true },
-        url: { type: 'url', message: 'The url must be an url', props: { placeholder: 'please input the url' } }
+        url: { type: 'url', message: 'The url must be an url', props: { placeholder: 'please input the url' } },
+        order: { type: 'number' },
+        nextarr: {
+          type: 'array',
+          onDragEnd: this.done,
+          defaultField: {
+            type: 'object',
+            fields: {
+              num: { type: 'number' },
+              test: { type: 'number' }
+            }
+          }
+        }
       }
     }
   },

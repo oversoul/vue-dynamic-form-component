@@ -12,7 +12,7 @@ module.exports = {
   },
   configureWebpack: config => {
     if (process.env.NODE_ENV === 'production') {
-      config.externals = ['vue', 'Vue', 'element-ui', 'ElementUI']
+      config.externals = ['vue', 'Vue', 'element-ui', 'ElementUI', 'vue-bus', 'VueBus']
     }
   }
 }

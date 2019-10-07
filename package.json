@@ -44,5 +44,8 @@
     "vue-template-compiler": "^2.6.10",
     "vuepress": "^1.0.1",
     "vuepress-plugin-sitemap": "^2.1.2"
+  },
+  "dependencies": {
+    "vuedraggable": "^2.23.2"
   }
 }

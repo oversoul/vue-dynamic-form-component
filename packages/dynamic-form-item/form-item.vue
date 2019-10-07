@@ -14,6 +14,9 @@
       v-if="!isComplexType(typeDescriptor.type)"
       v-model="_value"
       :size="size"
+      :prop="prop ? prop : key"
+      :background-color="subFormBackgroundColor"
+      :language="language"
       :descriptor="typeDescriptor">
     </dynamic-input>
     <!-- complex type, object or array -->
@@ -74,18 +77,21 @@
           </dynamic-input>
         </div>
         <div v-else class="sub-dynamic-form array" :style="{backgroundColor: subFormBackgroundColor}">
+          <draggable v-model="_value" @end="onDragEnd(_value, typeDescriptor.onDragEnd)" handle=".drag-button">
           <dynamic-form-item
             v-for="(temp, key) in _value"
             v-model="_value[key]"
             :key="key"
             :prop="prop ? prop + '.' + key : key"
             :deletable="true"
+            :draggable="true"
             :descriptor="typeDescriptor.defaultField"
             :language="language"
             label-width="0px"
             :background-color="subFormBackgroundColor"
             @delete="deleteItem(key)">
           </dynamic-form-item>
+          </draggable>
           <div class="add-key-input-group">
             <el-button type="primary" icon="el-icon-plus" :size="size" @click="addArrayItem" plain>{{ language.addArrayItemButtonText }}</el-button>
           </div>
@@ -93,12 +99,14 @@
       </template>
     </template>
     <el-button v-if="deletable" class="delete-button" type="text" icon="el-icon-close" @click="emitDelete"></el-button>
+    <i v-if="draggable" class="el-icon-rank drag-button"></i>
   </el-form-item>
 </template>
 
 <script>
 import { isComplexType, getLabelWidth, darkenColor, parseDescriptor, findTypeDescriptor } from '../utils'
 import DynamicInput from '../dynamic-input/input'
+import draggable from 'vuedraggable'
 
 export default {
   name: 'dynamic-form-item',
@@ -150,11 +158,20 @@ export default {
       type: Boolean,
       default: false
     },
+    draggable: {
+      type: Boolean,
+      default: false
+    },
+    onDragEndCallback: {
+      type: Function,
+      default: () => {}
+    },
     labelWidth: String,
     language: Object
   },
   components: {
-    DynamicInput
+    DynamicInput,
+    draggable,
   },
   computed: {
     _value: {
@@ -177,8 +194,13 @@ export default {
       hashMapKey: ''
     }
   },
-  created () {},
+  created () {
+  },
   methods: {
+    onDragEnd(value, callback) {
+      if ( typeof callback !== 'function' ) return;
+      callback(value)
+    },
     isComplexType,
     getLabelWidth,
     findTypeDescriptor,
@@ -241,6 +263,21 @@ export default {
   color: red;
 }
 .dynamic-input + .delete-button {
+  top: auto;
+  right: auto;
+}
+.drag-button {
+  position: absolute;
+  top: 40px;
+  right: 5px;
+  font-size: 20px;
+  color: #606266;
+  padding: 5px 0;
+}
+.drag-button:hover {
+  color: #5cb6ff;
+}
+.dynamic-input + .drag-button {
   top: auto;
   right: auto;
 }

@@ -4,7 +4,9 @@
       v-if="_value"
       ref="dynamic-form"
       :model="_value"
-      :rules="descriptors">
+      :rules="descriptors"
+      enctype="multipart/form-data"
+      >
       <dynamic-form-item
         v-for="(descriptor, key) in descriptors"
         v-model="_value[key]"
@@ -16,6 +18,7 @@
         :descriptor="descriptor"
         :language="language"
         :size="size"
+        :onDragEndCallback="onDragEnd"
         :background-color="backgroundColor"
         :bg-color-offset="bgColorOffset">
       </dynamic-form-item>
@@ -80,6 +83,11 @@ export default {
     bgColorOffset: {
       type: Number,
       default: 8
+    },
+
+    onDragEndCallback: {
+      type: Function,
+      default: () => {}
     }
   },
   components: {
@@ -115,6 +123,8 @@ export default {
   },
   created () {
     this.init()
+    // this.$bus.$on('onImageRemove', this.$listeners.onImageRemove)
+    // this.$bus.$on('onImagePreview', this.$listeners.onImagePreview)
   },
   methods: {
     findTypeDescriptor,
@@ -164,8 +174,10 @@ export default {
       } else {
         return new Promise((resolve, reject) => {
           this.$refs['dynamic-form'].validate(valid => {
-            resolve(valid)
+            return resolve(valid)
           })
+
+          return reject()
         })
       }
     },
@@ -174,7 +186,10 @@ export default {
     },
     clearValidate () {
       this.$refs['dynamic-form'].clearValidate()
-    }
+    },
+    onDragEnd(arr) {
+      console.log('form');
+    },
   }
 }
 </script>
