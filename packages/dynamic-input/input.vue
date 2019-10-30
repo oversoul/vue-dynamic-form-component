@@ -5,16 +5,16 @@
     v-if="!isSpecialType"
     v-bind="_bind"
     :is="name"
-    :size="size">
-  </component>
+    :size="size"
+  ></component>
   <!-- integer, number, float type use el-input with v-model.number -->
   <el-input
     v-else-if="['integer', 'number', 'float'].includes(descriptor.type)"
     class="dynamic-input"
     v-model.number="_value"
     v-bind="_bind"
-    :size="size">
-  </el-input>
+    :size="size"
+  ></el-input>
   <!-- enum type use el-select -->
   <el-select
     v-else-if="descriptor.type === 'enum'"
@@ -25,8 +25,15 @@
     :size="size"
     :filterable="descriptor.filterable"
     @change="onSelectChange"
-    :multiple="descriptor.multiple">
-    <el-option v-for="option in _options" :key="option.label" :value="option.value" :label="option.label" :disabled="option.disabled"></el-option>
+    :multiple="descriptor.multiple"
+  >
+    <el-option
+      v-for="option in _options"
+      :key="option.label"
+      :value="option.value"
+      :label="option.label"
+      :disabled="option.disabled"
+    ></el-option>
   </el-select>
   <!-- date type use el-date-picker -->
   <el-date-picker
@@ -35,42 +42,57 @@
     type="datetime"
     v-model="_value"
     v-bind="_bind"
-    :size="size">
-  </el-date-picker>
+    :size="size"
+  ></el-date-picker>
   <div v-else-if="descriptor.type === 'upload'" class="file-upload">
-    <div v-if="!_value" >
+    <div v-if="!_value">
       <h2>Select an image</h2>
-      <input type="file" @change="onFileChange">
+      <input type="file" @change="onFileChange" />
     </div>
     <div v-else>
       <el-image v-bind="_bind" style="width: 100px; height: 100px" :src="_value"></el-image>
     </div>
   </div>
+  <el-cascader
+    v-else-if="descriptor.type === 'cascader'"
+
+    :size="size"
+    v-bind="_bind"
+    v-model="_value"
+    class="dynamic-input"
+    :options="descriptor.options"
+    @change="selectChangeCascader"
+    :multiple="descriptor.multiple"
+    :filterable="descriptor.filterable"
+    :show-all-levels="descriptor.showAllLevels"
+    :class="{'multi-select': descriptor.multiple}"
+  ></el-cascader>
 </template>
 
 <script>
 const TYPE_COMPONENT_MAP = {
-  string: 'el-input',
-  number: 'el-input-number',
-  boolean: 'el-switch',
-  regexp: 'el-input',
-  integer: 'el-input-number',
-  float: 'el-input-number',
-  enum: 'el-select',
-  url: 'el-input',
-  upload: 'el-upload',
-}
+  string: "el-input",
+  number: "el-input-number",
+  boolean: "el-switch",
+  regexp: "el-input",
+  integer: "el-input-number",
+  float: "el-input-number",
+  enum: "el-select",
+  url: "el-input",
+  upload: "el-upload",
+  cascader: "el-cascader",
+};
 
 export default {
-  name: 'dynamic-input',
-  componentName: 'dynamic-input',
+  name: "dynamic-input",
+  componentName: "dynamic-input",
   props: {
     value: {
       required: true
     },
     size: {
       type: String,
-      default: 'small'
+      default: "small"
     },
     descriptor: {
       type: Object,
@@ -83,84 +105,98 @@ export default {
   components: {},
   computed: {
     _value: {
-      get () {
-        return this.value
+      get() {
+        return this.value;
       },
-      set (value) {
-        this.$emit('input', value)
+      set(value) {
+        this.$emit("input", value);
       }
     },
-    _options () {
+    _options() {
       if (this.descriptor && this.descriptor.options instanceof Array) {
         return this.descriptor.options.map(item => {
-          if (typeof item === 'string') {
-            return { label: item, value: item }
+          if (typeof item === "string") {
+            return { label: item, value: item };
           } else {
-            return item
+            return item;
           }
-        })
+        });
       } else {
-        return []
+        return [];
       }
     },
-    _bind () {
+    _bind() {
       let data = {};
       /**
        * Compatible with the version <= 2.2.0
        * These props is the first level prop of descriptor in old version
        */
-      ['disabled', 'placeholder', 'autocomplete'].forEach(key => {
-        if (typeof this.descriptor[key] !== 'undefined') {
-          data[key] = this.descriptor[key]
+      ["disabled", "placeholder", "autocomplete"].forEach(key => {
+        if (typeof this.descriptor[key] !== "undefined") {
+          data[key] = this.descriptor[key];
         }
-      })
-      return Object.assign(data, this.descriptor.props)
+      });
+      return Object.assign(data, this.descriptor.props);
     },
-    isSpecialType () {
-      return ['integer', 'float', 'number', 'enum', 'date', 'upload'].includes(this.descriptor.type)
+    isSpecialType() {
+      return ["integer", "float", "number", "enum", "date", "upload", "cascader"].includes(
+        this.descriptor.type
+      );
     }
   },
-  data () {
+  data() {
     return {
-      name: '',
-      dialogImageUrl: '',
+      name: "",
+      dialogImageUrl: "",
       dialogVisible: false
-    }
+    };
   },
-  created () {
-    this.init()
+  created() {
+    this.init();
+    if ( this.descriptor.type === 'cascader' ) {
+      this.descriptor.validator = (rule, value) => {};
+    }
   },
   methods: {
-    init () {
-      this.name = TYPE_COMPONENT_MAP[this.descriptor.type] || 'el-input'
+    init() {
+      this.name = TYPE_COMPONENT_MAP[this.descriptor.type] || "el-input";
     },
 
     onFileChange(e) {
       var files = e.target.files || e.dataTransfer.files;
-      if (!files.length)
-        return;
+      if (!files.length) return;
       this.createImage(files[0]);
     },
     createImage(file) {
       var image = new Image();
       var reader = new FileReader();
 
-      reader.onload = (e) => {
+      reader.onload = e => {
         this._value = e.target.result;
       };
       reader.readAsDataURL(file);
-      if ( typeof this.descriptor.onFileChange === 'function' ) {
+      if (typeof this.descriptor.onFileChange === "function") {
         this.descriptor.onFileChange(file, this.prop);
       }
     },
-    removeImage: function (e) {
-      this._value = '';
+    removeImage: function(e) {
+      this._value = "";
     },
 
     onSelectChange(value) {
-      if ( typeof this.descriptor.onChange === 'function' ) {
+      if (typeof this.descriptor.onChange === "function") {
         this.descriptor.onChange(value, this.prop);
       }
+    },
+
+    selectChangeCascader(value) {
+      if (typeof this.descriptor.onChange === "function") {
+        this.descriptor.onChange(value, this.prop);
+      }
+    },
+
+    onCascaderSelectChange(value) {
+      console.log(value);
     },
 
     onImagePreview(file) {
@@ -181,10 +217,10 @@ export default {
       this.dialogVisible = true;
     },
     onFLChange(file, fileList) {
-      this._value = fileList
+      this._value = fileList;
     }
   }
-}
+};
 </script>
 
 <style lang="scss" scoped>
