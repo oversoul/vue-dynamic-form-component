@@ -24,6 +24,7 @@
     :class="{'multi-select': descriptor.multiple}"
     :size="size"
     :filterable="descriptor.filterable"
+    @change="onSelectChange"
     :multiple="descriptor.multiple">
     <el-option v-for="option in _options" :key="option.label" :value="option.value" :label="option.label" :disabled="option.disabled"></el-option>
   </el-select>
@@ -154,6 +155,12 @@ export default {
     },
     removeImage: function (e) {
       this._value = '';
+    },
+
+    onSelectChange(value) {
+      if ( typeof this.descriptor.onChange === 'function' ) {
+        this.descriptor.onChange(value, this.prop);
+      }
     },
 
     onImagePreview(file) {
