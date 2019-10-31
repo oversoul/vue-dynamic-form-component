@@ -55,11 +55,12 @@
   </div>
   <el-cascader
     v-else-if="descriptor.type === 'cascader'"
-
+    ref="cascader"
     :size="size"
     v-bind="_bind"
     v-model="_value"
     class="dynamic-input"
+    :props="descriptor.props"
     :options="descriptor.options"
     @change="selectChangeCascader"
     :multiple="descriptor.multiple"
@@ -155,6 +156,14 @@ export default {
     this.init();
     if ( this.descriptor.type === 'cascader' ) {
       this.descriptor.validator = (rule, value) => {};
+    }
+  },
+  mounted() {
+    if ( this.descriptor.type === "cascader" ) {
+      
+      this.descriptor.clear = () => {
+        this.$refs.cascader.handleClear()
+      };
     }
   },
   methods: {
